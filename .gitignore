@@ -2,6 +2,7 @@
 *.pyc
 .coverage
 
+/build/
 /dist/
 /*.egg-info
 /*.egg
