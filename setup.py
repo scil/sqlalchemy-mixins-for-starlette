@@ -14,7 +14,7 @@ def requirements():
     filename = os.path.join(os.path.dirname(__file__), 'requirements.txt')
     return [line.rstrip('\n') for line in open(filename).readlines()]
 
-setup(name='sqlalchemy_mixins',
+setup(name='sqlalchemy_mixins_for_starlette',
       version='1.0',
       description='Active Record, Django-like queries, nested eager load '
                   'and beauty __repr__ for SQLAlchemy',
@@ -23,13 +23,13 @@ setup(name='sqlalchemy_mixins',
       author='Alexander Litvinenko',
       author_email='litvinenko1706@gmail.com',
       license='MIT',
-      packages=['sqlalchemy_mixins'],
+      packages=['sqlalchemy_mixins_for_starlette'],
       zip_safe=False,
       include_package_data=True,
       install_requires=[
           "SQLAlchemy >= 1.0",
           "six",
-          "typing; python_version < '3.5'"
+          "typing; python_version >= '3.7'"
       ],
       keywords=['sqlalchemy', 'active record', 'activerecord', 'orm',
                 'django-like', 'django', 'eager load', 'eagerload',  'repr',
@@ -40,13 +40,8 @@ setup(name='sqlalchemy_mixins',
           'Environment :: Web Environment',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: MIT License',
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.3',
-          'Programming Language :: Python :: 3.4',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: Implementation :: CPython',
           'Topic :: Database',
       ],

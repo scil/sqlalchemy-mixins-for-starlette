@@ -7,7 +7,6 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import subqueryload
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from .session import SessionMixin
 
 JOINED = 'joined'
 SUBQUERY = 'subquery'
@@ -69,7 +68,7 @@ def _eager_expr_from_flat_schema(flat_schema):
     return result
 
 
-class EagerLoadMixin(SessionMixin):
+class EagerLoadMixin():
     __abstract__ = True
 
     @classmethod
@@ -101,9 +100,9 @@ class EagerLoadMixin(SessionMixin):
         """
         Eagerload for simple cases where we need to just
          joined load some relations
-        In strings syntax, you can split relations with dot 
+        In strings syntax, you can split relations with dot
          due to this SQLAlchemy feature: https://goo.gl/yM2DLX
-         
+
         :type paths: *List[str] | *List[InstrumentedAttribute]
 
         Example 1:
@@ -120,7 +119,7 @@ class EagerLoadMixin(SessionMixin):
         """
         Eagerload for simple cases where we need to just
          joined load some relations
-        In strings syntax, you can split relations with dot 
+        In strings syntax, you can split relations with dot
          (it's SQLAlchemy feature)
 
         :type paths: *List[str] | *List[InstrumentedAttribute]

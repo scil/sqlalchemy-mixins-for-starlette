@@ -1,5 +1,6 @@
+from starlette_core.database import Session
+
 from .utils import classproperty
-from .session import SessionMixin
 from .inspection import InspectionMixin
 
 
@@ -7,11 +8,12 @@ class ModelNotFoundError(ValueError):
     pass
 
 
-class ActiveRecordMixin(InspectionMixin, SessionMixin):
+class ActiveRecordMixin(InspectionMixin):
     __abstract__ = True
 
     @classproperty
     def settable_attributes(cls):
+        # todo
         return cls.columns + cls.hybrid_properties + cls.settable_relations
 
     def fill(self, **kwargs):
@@ -23,12 +25,26 @@ class ActiveRecordMixin(InspectionMixin, SessionMixin):
 
         return self
 
-    def save(self):
+    def save_flush(self):
         """Saves the updated model to the current entity db.
         """
-        self.session.add(self)
-        self.session.flush()
+        session = Session()
+
+        session.add(self)
+        session.flush()
         return self
+
+    def update_flush(self, **kwargs):
+        """Same as :meth:`fill` method but persists changes to database.
+        """
+        return self.fill(**kwargs).save_flush()
+
+    def delete_flush(self):
+        """Removes the model from the current entity session and mark for deletion.
+        """
+        session = Session()
+        session.delete(self)
+        session.flush()
 
     @classmethod
     def create(cls, **kwargs):
@@ -36,18 +52,7 @@ class ActiveRecordMixin(InspectionMixin, SessionMixin):
         :param kwargs: attributes for the record
         :return: the new model instance
         """
-        return cls().fill(**kwargs).save()
-
-    def update(self, **kwargs):
-        """Same as :meth:`fill` method but persists changes to database.
-        """
-        return self.fill(**kwargs).save()
-
-    def delete(self):
-        """Removes the model from the current entity session and mark for deletion.
-        """
-        self.session.delete(self)
-        self.session.flush()
+        return cls().fill(**kwargs).save_flush()
 
     @classmethod
     def destroy(cls, *ids):
@@ -55,9 +60,11 @@ class ActiveRecordMixin(InspectionMixin, SessionMixin):
         :type ids: list
         :param ids: primary key ids of records
         """
+        session = Session()
+
         for pk in ids:
-            cls.find(pk).delete()
-        cls.session.flush()
+            session.delete(cls.query.get(pk))
+        session.flush()
 
     @classmethod
     def all(cls):

@@ -2,6 +2,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/sqlalchemy_mixins.svg)](https://pypi.python.org/pypi/sqlalchemy_mixins)
 [![Python versions](https://img.shields.io/pypi/pyversions/sqlalchemy_mixins.svg)](https://travis-ci.org/absent1706/sqlalchemy-mixins)
 
+A fork of sqlalchemy-mixins for starlette based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
+
 # SQLAlchemy mixins
 A pack of framework-agnostic, easy-to-integrate and well tested mixins for SQLAlchemy ORM.
 
@@ -12,10 +14,29 @@ Why it's cool:
  * framework-agnostic
  * easy integration to your existing project:
    ```python
-    from sqlalchemy_mixins import AllFeaturesMixin
+from sqlalchemy_mixins_for_starlette import AllFeaturesMixin
 
-    class User(Base, AllFeaturesMixin):
-         pass
+
+# https://accent-starlette.github.io/starlette-core/database/
+from starlette_core.database import Base as AccentBase  # noqa
+from starlette_core.database import Database, DatabaseURL, metadata
+
+def init_database_and_session():
+        engine_kwargs = {}
+        return Database(config.SQLALCHEMY_DATABASE_URI, engine_kwargs=engine_kwargs)
+
+# in accent, session is inited in Database.__init__
+database = init_database_and_session()
+
+class Base(AccentBase,AllFeaturesMixin):
+
+        __abstract__ = True
+
+        # not to use AccentBase.__repr__
+        __repr__ = AllFeaturesMixin.__repr__
+
+class User(Base, AllFeaturesMixin):
+        pass
     ```
  * clean code, splitted by modules
  * follows best practices of
@@ -31,8 +52,6 @@ Why it's cool:
 
 1. [Installation](#installation)
 1. [Quick Start](#quick-start)
-    1. [Framework-agnostic](#framework-agnostic)
-    1. [Usage with Flask-SQLAlchemy](#usage-with-flask-sqlalchemy)
 1. [Features](#features)
     1. [Active Record](#active-record)
         1. [CRUD](#crud)
@@ -62,7 +81,6 @@ python -m unittest discover sqlalchemy_mixins/
 
 ## Quick Start
 
-### Framework-agnostic
 Here's a quick demo of what our mixins can do.
 
 ```python
@@ -88,36 +106,6 @@ See [full example](examples/all_features.py)
 
 > To interactively play with this example from CLI, [install iPython](https://ipython.org/install.html) and type `ipython -i examples\all_features.py`
 
-### Usage with Flask-SQLAlchemy
-
-```python
-import sqlalchemy as sa
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy_mixins import AllFeaturesMixin
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
-db = SQLAlchemy(app)
-
-######### Models ######### 
-class BaseModel(db.Model, AllFeaturesMixin):
-    __abstract__ = True
-    pass
-
-
-class User(BaseModel):
-    id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String)
-
-######## Initialize ########
-BaseModel.set_session(db.session)
-
-######## Create test entity ########
-db.create_all()
-user = User.create(name='bob')
-print(user)
-```
 
 # Features
 

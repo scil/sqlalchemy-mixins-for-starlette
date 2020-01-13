@@ -1,5 +1,4 @@
 # low-level, tiny mixins. you will rarely want to use them in real world
-from .session import SessionMixin
 from .inspection import InspectionMixin
 
 # high-level mixins
