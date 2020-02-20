@@ -4,6 +4,19 @@
 
 A fork of sqlalchemy-mixins for starlette based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
 
+Main unique feature: use customize session instead of session provided by starlette_core.
+```
+user = User()
+user.save() # use starlette_core session
+user.db(my_db)
+user.save() # use my_db
+user.db(None)
+user.save() # use starlette_core session
+
+User.create_from_schema(user_in, my_db) # use my_db
+
+```
+
 # SQLAlchemy mixins
 A pack of framework-agnostic, easy-to-integrate and well tested mixins for SQLAlchemy ORM.
 
@@ -16,16 +29,15 @@ Why it's cool:
    ```python
 from sqlalchemy_mixins_for_starlette import AllFeaturesMixin
 
-
-# https://accent-starlette.github.io/starlette-core/database/
+""" https://accent-starlette.github.io/starlette-core/database/ """
 from starlette_core.database import Base as AccentBase  # noqa
 from starlette_core.database import Database, DatabaseURL, metadata
 
 def init_database_and_session():
+        """ in accent-starlette.github.io/starlette-core, session is inited in Database.__init__"""
         engine_kwargs = {}
         return Database(config.SQLALCHEMY_DATABASE_URI, engine_kwargs=engine_kwargs)
 
-# in accent, session is inited in Database.__init__
 database = init_database_and_session()
 
 class Base(AccentBase,AllFeaturesMixin):
@@ -46,7 +58,9 @@ class User(Base, AllFeaturesMixin):
  * 95%+ test coverage
  * already powers a big project
 
-> Russian readers, see related **[article on habrahabr.ru](https://habrahabr.ru/post/324876/)**
+## Features added by scil
+
+- paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration)
 
 ## Table of Contents
 
