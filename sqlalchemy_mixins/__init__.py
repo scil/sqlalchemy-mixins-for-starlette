@@ -18,7 +18,6 @@ from .serialize import SerializeMixin
 # all features combined to one mixin
 from .utils import classproperty
 
-
 # https://accent-starlette.github.io/starlette-core/database/
 from starlette_core.database import Base as AccentBase
 from sqlalchemy_paginator import Paginator
@@ -30,38 +29,12 @@ from pydantic import BaseModel
 #     __abstract__ = True
 #     __repr__ = ReprMixin.__repr__
 
-class Base(AccentBase, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin):
+
+class Base(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin):
+    """ add support for pydantic schema
+    """
 
     __abstract__ = True
-
-    # not to use AccentBase.__repr__
-    # __repr__ = ReprMixin.__repr__
-
-    def save(self) -> None:
-        """ save the current instance """
-
-        session = self._session or Session()
-
-        try:
-            session.add(self)
-            session.commit()
-            #todo
-            session.refresh(self)
-        except:
-            session.rollback()
-            raise
-
-    def delete(self) -> None:
-        """ delete the current instance """
-
-        session = self._session or Session()
-
-        try:
-            session.delete(self)
-            session.commit()
-        except:
-            session.rollback()
-            raise
 
     def update_from_schema(self, schema: BaseModel) -> Base:
         item_data = jsonable_encoder(self)
@@ -78,29 +51,28 @@ class Base(AccentBase, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
         return self.save_return()
 
     @classmethod
-    def init_from_schema(cls, schema: BaseModel, db=None) -> Base:
+    def init_from_schema(cls, schema: BaseModel) -> Base:
         """Create and persist a new record for the model
         :param kwargs: attributes for the record
         :return: the new model instance
         """
-        ins = cls(**schema.dict(skip_defaults=True))
+        return  cls(**schema.dict(skip_defaults=True))
 
-        return ins if db is None else ins.db(db)
 
     @classmethod
-    def create_from_schema(cls, schema: BaseModel, additions=None, db=None) -> Base:
+    def create_from_schema(cls, db, schema: BaseModel, additions=None, ) -> Base:
         if additions is None:
             return cls(**schema.dict(skip_defaults=True)).save_return(db)
 
         return cls(**schema.dict(skip_defaults=True), **additions).save_return(db)
 
     @classmethod
-    def paginate(cls, per_page_limit, optional_count_query_set=None,
-                 allow_empty_first_page=True, db=None):
-        return Paginator(cls._get_query(db),
+    def paginate(cls, db, per_page_limit, optional_count_query_set=None,
+                 allow_empty_first_page=True, ):
+        return Paginator(db.query,
                          per_page_limit, optional_count_query_set, allow_empty_first_page)
 
     @classmethod
-    def get_multi(cls, skip=0, limit=100, db=None) -> List[Optional[Base]]:
+    def get_multi(cls, db, skip=0, limit=100, ) -> List[Optional[Base]]:
 
-        return cls._get_query(db).offset(skip).limit(limit).all()
+        return db.query.offset(skip).limit(limit).all()

@@ -2,7 +2,11 @@
 [![PyPI version](https://img.shields.io/pypi/v/sqlalchemy_mixins.svg)](https://pypi.python.org/pypi/sqlalchemy_mixins)
 [![Python versions](https://img.shields.io/pypi/pyversions/sqlalchemy_mixins.svg)](https://travis-ci.org/absent1706/sqlalchemy-mixins)
 
-A fork of sqlalchemy-mixins for starlette based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
+A fork of sqlalchemy-mixins for starlette, especially fastapi.
+
+# About accent-starlette/starlette-core
+
+Old version v2 based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
 
 Main unique feature: use customize session instead of session provided by starlette_core.
 ```

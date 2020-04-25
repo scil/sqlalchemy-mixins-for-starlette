@@ -1,6 +1,6 @@
-from starlette_core.database import Session
-from starlette_core.database import Base as AccentBase
 from starlette.exceptions import HTTPException
+import sqlalchemy as sa
+from sqlalchemy_utils import dependent_objects, get_referencing_foreign_keys
 
 from .utils import classproperty
 from .inspection import InspectionMixin
@@ -9,7 +9,6 @@ from .inspection import InspectionMixin
 class ModelNotFoundError(ValueError):
     pass
 
-
 class ActiveRecordMixin(InspectionMixin):
     __abstract__ = True
 
@@ -17,15 +16,54 @@ class ActiveRecordMixin(InspectionMixin):
         super().__init__()
         self._session = None
 
+
     def db(self, db):
         """
         alternative way to use db session, instead of starlette_core
         """
         self._session = db
 
-    @classmethod
-    def _get_query(cls, db=None):
-        return cls.query if db is None else db.query
+    def delete(self) -> None:
+        """ delete the current instance """
+
+        db = self._session
+
+        try:
+            db.delete(self)
+            db.commit()
+        except:
+            db.rollback()
+            raise
+
+    def can_be_deleted(self) -> bool:
+        """
+        Simple helper to check if the instance has entities
+        that will prevent this from being deleted via a protected foreign key.
+
+        origin
+        repo: https://accent-starlette.github.io/starlette-core/database/
+        file: starlette_core\database.py
+        """
+
+        deps = list(
+            dependent_objects(
+                self,
+                (
+                    fk
+                    for fk in get_referencing_foreign_keys(self.__class__)
+                    # On most databases RESTRICT is the default mode hence we
+                    # check for None values also
+                    if fk.ondelete == "RESTRICT" or fk.ondelete is None
+                ),
+            ).limit(1)
+        )
+
+        return not deps
+
+    def refresh_from_db(self) -> None:
+        """ Refresh the current instance from the database """
+
+        sa.inspect(self).session.refresh(self)
 
     # todo cache?
     @classproperty
@@ -41,13 +79,27 @@ class ActiveRecordMixin(InspectionMixin):
 
         return self
 
+    def save(self,db=None) -> None:
+        """ save the current instance """
+
+        if db is None:
+            db = self._session
+        else:
+            self.db(db)
+
+        try:
+            db.add(self)
+            db.commit()
+            # todo
+            db.refresh(self)
+        except:
+            db.rollback()
+            raise
+
     def save_return(self,db=None):
         """Saves the updated model to the current entity db.
         """
-        if db is not None:
-            self.db(db)
-
-        self.save(self)
+        self.save(db)
         return self
 
     def update(self, **kwargs):
@@ -71,57 +123,54 @@ class ActiveRecordMixin(InspectionMixin):
         return cls().fill(**kwargs).save_return(db)
 
     @classmethod
-    def create_multi(cls, multi, db=None):
+    def create_multi(cls, db,multi):
         """Create and persist a new record for the model
         :param kwargs: attributes for the record
         :return: the new model instance
         """
-        session = db or Session()
-
         try:
             for one in multi:
                 ins = cls().fill(**one)
-                session.add(ins)
-            session.commit()
+                db.add(ins)
+            db.commit()
         except:
-            session.rollback()
+            db.rollback()
             raise
 
 
     @classmethod
-    def destroy(cls, db=None, *ids):
+    def destroy(cls, db, *ids):
         """Delete the records with the given ids
         :type ids: list
         :param ids: primary key ids of records
         """
-        session = db or Session()
-        query = cls._get_query(db)
+        query = db.query
 
         try:
             for pk in ids:
-                session.delete(query.get(pk))
-            session.commit()
+                db.delete(query.get(pk))
+            db.commit()
         except:
-            session.rollback()
+            db.rollback()
             raise
 
     @classmethod
-    def all(cls, db=None):
-        return cls._get_query(db).all()
+    def all(cls, db):
+        return db.query.all()
 
     @classmethod
-    def first(cls, db=None):
-        return cls._get_query(db).first()
+    def first(cls, db):
+        return db.query.first()
 
     @classmethod
-    def find(cls, id_, db=None):
+    def find(cls,db, id_,):
         """Find record by the id
         :param id_: the primary key
         """
-        return cls._get_query(db).get(id_)
+        return db.query.get(id_)
 
     @classmethod
-    def find_or_fail(cls, id_, detail=None, db=None):
+    def find_or_fail(cls,db, id_, detail=None, ):
         # assume that query has custom get_or_fail method
         result = cls.find(id_, db)
         if not result:
