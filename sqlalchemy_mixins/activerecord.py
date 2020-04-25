@@ -27,6 +27,7 @@ class ActiveRecordMixin(InspectionMixin):
     def _get_query(cls, db=None):
         return cls.query if db is None else db.query
 
+    # todo cache?
     @classproperty
     def settable_attributes(cls):
         return cls.columns + cls.hybrid_properties + cls.settable_relations
@@ -70,12 +71,30 @@ class ActiveRecordMixin(InspectionMixin):
         return cls().fill(**kwargs).save_return(db)
 
     @classmethod
+    def create_multi(cls, multi, db=None):
+        """Create and persist a new record for the model
+        :param kwargs: attributes for the record
+        :return: the new model instance
+        """
+        session = db or Session()
+
+        try:
+            for one in multi:
+                ins = cls().fill(**one)
+                session.add(ins)
+            session.commit()
+        except:
+            session.rollback()
+            raise
+
+
+    @classmethod
     def destroy(cls, db=None, *ids):
         """Delete the records with the given ids
         :type ids: list
         :param ids: primary key ids of records
         """
-        session = Session()
+        session = db or Session()
         query = cls._get_query(db)
 
         try:

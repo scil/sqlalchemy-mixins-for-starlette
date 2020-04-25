@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import List, Optional
 
 # low-level, tiny mixins. you will rarely want to use them in real world
@@ -30,10 +31,11 @@ from pydantic import BaseModel
 #     __repr__ = ReprMixin.__repr__
 
 class Base(AccentBase, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin):
+
     __abstract__ = True
 
     # not to use AccentBase.__repr__
-    __repr__ = ReprMixin.__repr__
+    # __repr__ = ReprMixin.__repr__
 
     def save(self) -> None:
         """ save the current instance """
@@ -43,6 +45,8 @@ class Base(AccentBase, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
         try:
             session.add(self)
             session.commit()
+            #todo
+            session.refresh(self)
         except:
             session.rollback()
             raise
