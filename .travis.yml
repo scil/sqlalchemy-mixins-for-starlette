@@ -1,19 +1,17 @@
 language: python
-env:
-  - CODECLIMATE_REPO_TOKEN=35f36cc29515cff2bca7c202b12a906d7154e8d104fba662fe8f6ce209518db5
 python:
-  - "2.7"
-  - "3.3"
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
+  - "3.8"
 
-# Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
+
+# Also run these python versions with a specific distribution:
 matrix:
   include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
+    - python: 3.3
+      dist: trusty
 
 # command to install dependencies
 install: "pip install -r requirements-dev.txt"
@@ -28,5 +26,4 @@ script:
   - python examples/repr.py
   - python examples/smartquery.py
   - python examples/serialize.py
-after_success:
-  - codeclimate-test-reporter
+  - python examples/timestamp.py
