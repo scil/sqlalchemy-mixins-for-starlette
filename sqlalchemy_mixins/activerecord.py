@@ -11,10 +11,11 @@ class ModelNotFoundError(ValueError):
 
 class ActiveRecordMixin(InspectionMixin):
     __abstract__ = True
+    _session = None
 
-    def __init__(self):
-        super().__init__()
-        self._session = None
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+    #     self._session = None
 
 
     def db(self, db):
