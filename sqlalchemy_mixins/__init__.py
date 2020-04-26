@@ -69,10 +69,10 @@ class Base(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin):
     @classmethod
     def paginate(cls, db, per_page_limit, optional_count_query_set=None,
                  allow_empty_first_page=True, ):
-        return Paginator(db.query,
+        return Paginator(db.query(cls),
                          per_page_limit, optional_count_query_set, allow_empty_first_page)
 
     @classmethod
     def get_multi(cls, db, skip=0, limit=100, ) -> List[Optional[Base]]:
 
-        return db.query.offset(skip).limit(limit).all()
+        return db.query(cls).offset(skip).limit(limit).all()

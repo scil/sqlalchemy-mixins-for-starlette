@@ -145,7 +145,7 @@ class ActiveRecordMixin(InspectionMixin):
         :type ids: list
         :param ids: primary key ids of records
         """
-        query = db.query
+        query = db.query(cls)
 
         try:
             for pk in ids:
@@ -157,18 +157,18 @@ class ActiveRecordMixin(InspectionMixin):
 
     @classmethod
     def all(cls, db):
-        return db.query.all()
+        return db.query(cls).all()
 
     @classmethod
     def first(cls, db):
-        return db.query.first()
+        return db.query(cls).first()
 
     @classmethod
     def find(cls,db, id_,):
         """Find record by the id
         :param id_: the primary key
         """
-        return db.query.get(id_)
+        return db.query(cls).get(id_)
 
     @classmethod
     def find_or_fail(cls,db, id_, detail=None, ):
