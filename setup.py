@@ -1,12 +1,12 @@
 from setuptools import setup
 
 """
-1. set "HOME=E:/code/sqlalchemy-mixins"
-2. python setup.py sdist upload -r testpypi
-   or
-   python setup.py sdist upload -r pypi
+0. python3 -m pip install --user --upgrade twine
 
-see http://peterdowns.com/posts/first-time-with-pypi.html
+1. python3 setup.py sdist bdist_wheel
+2. python3 -m twine upload dist/*
+
+see https://packaging.python.org/tutorials/packaging-projects/
 """
 
 def requirements():
@@ -15,7 +15,7 @@ def requirements():
     return [line.rstrip('\n') for line in open(filename).readlines()]
 
 setup(name='sqlalchemy_mixins_for_starlette',
-      version='1.0',
+      version='1.2.1',
       description='Active Record, Django-like queries, nested eager load '
                   'and beauty __repr__ for SQLAlchemy',
       url='https://github.com/scil/sqlalchemy-mixins-for-starlette',
@@ -40,6 +40,11 @@ setup(name='sqlalchemy_mixins_for_starlette',
           'Environment :: Web Environment',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: Implementation :: CPython',

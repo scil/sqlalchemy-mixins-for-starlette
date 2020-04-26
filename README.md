@@ -4,6 +4,10 @@
 
 A fork of sqlalchemy-mixins for starlette, especially fastapi.
 
+## Features added by scil
+
+- paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration)
+
 # About accent-starlette/starlette-core
 
 Old version v2 based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
@@ -31,28 +35,10 @@ Why it's cool:
  * framework-agnostic
  * easy integration to your existing project:
    ```python
-from sqlalchemy_mixins_for_starlette import AllFeaturesMixin
+    from sqlalchemy_mixins import AllFeaturesMixin
 
-""" https://accent-starlette.github.io/starlette-core/database/ """
-from starlette_core.database import Base as AccentBase  # noqa
-from starlette_core.database import Database, DatabaseURL, metadata
-
-def init_database_and_session():
-        """ in accent-starlette.github.io/starlette-core, session is inited in Database.__init__"""
-        engine_kwargs = {}
-        return Database(config.SQLALCHEMY_DATABASE_URI, engine_kwargs=engine_kwargs)
-
-database = init_database_and_session()
-
-class Base(AccentBase,AllFeaturesMixin):
-
-        __abstract__ = True
-
-        # not to use AccentBase.__repr__
-        __repr__ = AllFeaturesMixin.__repr__
-
-class User(Base, AllFeaturesMixin):
-        pass
+    class User(Base, AllFeaturesMixin):
+         pass
     ```
  * clean code, splitted by modules
  * follows best practices of
@@ -62,14 +48,14 @@ class User(Base, AllFeaturesMixin):
  * 95%+ test coverage
  * already powers a big project
 
-## Features added by scil
-
-- paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration)
+> Russian readers, see related **[article on habrahabr.ru](https://habrahabr.ru/post/324876/)**
 
 ## Table of Contents
 
 1. [Installation](#installation)
 1. [Quick Start](#quick-start)
+    1. [Framework-agnostic](#framework-agnostic)
+    1. [Usage with Flask-SQLAlchemy](#usage-with-flask-sqlalchemy)
 1. [Features](#features)
     1. [Active Record](#active-record)
         1. [CRUD](#crud)
@@ -81,6 +67,7 @@ class User(Base, AllFeaturesMixin):
     1. [All-in-one: smart_query](#all-in-one-smart_query)
     1. [Beauty \_\_repr\_\_](#beauty-__repr__)
     1. [Serialize to dict](#serialize-to-dict)
+    1. [Timestamps](#timestamps)
 1. [Internal architecture notes](#internal-architecture-notes)
 1. [Comparison with existing solutions](#comparison-with-existing-solutions)
 1. [Changelog](#changelog)
@@ -99,6 +86,7 @@ python -m unittest discover sqlalchemy_mixins/
 
 ## Quick Start
 
+### Framework-agnostic
 Here's a quick demo of what our mixins can do.
 
 ```python
@@ -117,6 +105,10 @@ print(Comment.with_joined('user', 'post', 'post.comments').first())
 print(User.with_subquery('posts', 'posts.comments').first())
 # sort by rating DESC, user name ASC
 print(Post.sort('-rating', 'user___name').all())
+# created_at, updated_at timestamps added automatically
+print("Created Bob at ", bob.created_at)   
+# serialize to dict, with relationships
+print(bob.to_dict(nested=True).all())
 ```
 
 ![icon](http://i.piccy.info/i9/c7168c8821f9e7023e32fd784d0e2f54/1489489664/1113/1127895/rsz_18_256.png)
@@ -124,11 +116,46 @@ See [full example](examples/all_features.py)
 
 > To interactively play with this example from CLI, [install iPython](https://ipython.org/install.html) and type `ipython -i examples\all_features.py`
 
+### Usage with Flask-SQLAlchemy
+
+```python
+import sqlalchemy as sa
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy_mixins import AllFeaturesMixin
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+db = SQLAlchemy(app)
+
+######### Models ######### 
+class BaseModel(db.Model, AllFeaturesMixin):
+    __abstract__ = True
+    pass
+
+
+class User(BaseModel):
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String)
+
+######## Initialize ########
+BaseModel.set_session(db.session)
+
+######## Create test entity ########
+db.create_all()
+user = User.create(name='bob')
+print(user)
+```
 
 # Features
 
-Main features are [Active Record](#active-record), [Eager Load](#eager-load), [Django-like queries](#django-like-queries)
-and [Beauty \_\_repr\_\_](#beauty-__repr__).
+Main features are
+ * [Active Record](#active-record)
+ * [Eager Load](#eager-load)
+ * [Django-like queries](#django-like-queries)
+ * [Beauty \_\_repr\_\_](#beauty-__repr__)
+ * [Timestamps](#timestamps)
+ * [Serialize to dict](#serialize-to-dict)
 
 ## Active Record
 provided by [`ActiveRecordMixin`](sqlalchemy_mixins/activerecord.py)
@@ -468,6 +495,33 @@ print(user.to_dict(nested=True))
 ![icon](http://i.piccy.info/i9/c7168c8821f9e7023e32fd784d0e2f54/1489489664/1113/1127895/rsz_18_256.png)
 See [full example](examples/serialize.py)
 
+## Timestamps
+provided by [`TimestampsMixin`](sqlalchemy_mixins/timestamp.py)
+
+You can convert your model to dict.
+
+```python
+bob = User(name="Bob")
+session.add(bob)
+session.flush()
+
+print("Created Bob:    ", bob.created_at)
+# Created Bob:     2019-03-04 03:53:53.606765
+
+print("Pre-update Bob: ", bob.updated_at)
+# Pre-update Bob:  2019-03-04 03:53:53.606769
+
+time.sleep(2)
+
+bob.name = "Robert"
+session.commit()
+
+print("Updated Bob:    ", bob.updated_at)
+# Updated Bob:     2019-03-04 03:53:58.613044
+```
+![icon](http://i.piccy.info/i9/c7168c8821f9e7023e32fd784d0e2f54/1489489664/1113/1127895/rsz_18_256.png)
+See [full example](examples/timestamp.py)
+
 # Internal architecture notes
 Some mixins re-use the same functionality. It lives in [`SessionMixin`](sqlalchemy_mixins/session.py) (session access) and [`InspectionMixin`](sqlalchemy_mixins/inspection.py) (inspecting columns, relations etc.) and other mixins inherit them.
 
@@ -587,3 +641,48 @@ See [description](#all-in-one-smart_query) (at the end of paragraph) and [exampl
 ```python
 Post.where(rating__ne=2).all()
 ```
+
+### v1.2
+
+> This version contains breaking change, reverted in v1.2.1.
+> So:
+>   * v1.2 was removed from PyPi to avoid confusions
+>   * for those who already downloaded v1.2, we hardly recommend to switch to 1.2.1.
+>
+> Just use [v1.2.1](#v121) instead
+
+
+> By mistake, v1.2 code was released on PyPi as v1.1. 
+> It has been deleted from PyPi to avoid confusion. 
+> Sorry for any inconvenience guys.  
+
+1. **Removed Python 2, Python 3.2 compatibility**.
+
+1. Added Python 3.7, 3.8 compatibility. 
+ 
+1. Added [TimestampsMixin](#timestamps) (thanks, [jonatasleon](https://github.com/jonatasleon)). 
+
+1. (**Breaking change**, fixed in [v1.2.1](#v121)) [TimestampsMixin](#timestamps) was **included it to [AllFeaturesMixin](sqlalchemy_mixins/__init__.py)** which means `created_at` and `updated_at` fields were added to all models using `AllFeaturesMixin` which means you need to write migrations adding these fields.  
+
+1. Added [`contains` operator](https://github.com/absent1706/sqlalchemy-mixins/pull/29/files) (thanks, [alexbredo](https://github.com/alexbredo)).
+
+1. Added [date comparison operators](https://github.com/absent1706/sqlalchemy-mixins/pull/27/files) (thanks, [proteusvacuum](https://github.com/proteusvacuum)), so now you can write something like
+
+```python
+Post.where(created_at__year_ge=2014).all()
+Post.where(created_at__month_gt=10).all()
+Post.where(created_at__day_le=30).all()
+```
+
+### v1.2.1
+
+Reverted breaking change introduced in [1.2](#v12):
+
+removed [TimestampsMixin](#timestamps) from [AllFeaturesMixin](sqlalchemy_mixins/__init__.py). This addition in [v1.2](#v12) forced package users to write and run migration to add `created_at` and `updated_at` fields to all tables whose ORM models used `AllFeaturesMixin`.
+   Now you should add `TimestampsMixin` separately:
+   
+   ```python
+   class BaseModel(Base, AllFeaturesMixin, TimestampsMixin):
+       # ...
+   ```
+>>>>>>> 1e06e7d211ea1599a3531ef85490739a85195af2
