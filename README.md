@@ -50,7 +50,7 @@ class Item(Base):
 
 use
 ```
-models.Item.create_from_schema(item_in, {'owner_id':current_user.id})
+models.Item.create_from_schema(db, item_in, {'owner_id':current_user.id})
 ```
 
 # About accent-starlette/starlette-core
