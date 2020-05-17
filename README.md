@@ -9,7 +9,7 @@ A fork of sqlalchemy-mixins for starlette, especially fastapi.
 - API for fastapi
   - `create_from_schema`
   - `init_from_schema`
-- paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration)
+- paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration). I am considerring [ djrobstep/sqlakeyset](https://github.com/djrobstep/sqlakeyset)  which is updated recently.
 
 ## Example
 
