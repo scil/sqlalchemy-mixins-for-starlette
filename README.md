@@ -7,8 +7,8 @@ A fork of sqlalchemy-mixins for starlette, especially fastapi.
 ## Features added by scil
 
 - API for fastapi
-  - `create_from_schema`
-  - `init_from_schema`
+  - `create_from_schema`.  save a new line from schema.
+  - `init_from_schema` only create a new object from schema, not saved into db yet.
 - paginate. Powered by [exhuma/sqlalchemy-paginator@integration](https://github.com/exhuma/sqlalchemy-paginator/tree/integration). I am considerring [ djrobstep/sqlakeyset](https://github.com/djrobstep/sqlakeyset)  which is updated recently.
 
 ## Example
