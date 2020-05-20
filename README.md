@@ -88,7 +88,7 @@ def get_current_user(
 
 Old version v2 based on [accent-starlette/starlette-core](https://github.com/accent-starlette/starlette-core)
 
-Main unique feature: use customize session instead of session provided by starlette_core.
+Main unique feature: no need to pass argument `db`, as it uses customize session instead of session provided by fastapi:
 ```
 user = User()
 user.save() # use starlette_core session
