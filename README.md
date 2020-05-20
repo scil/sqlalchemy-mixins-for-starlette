@@ -5,7 +5,7 @@
 A fork of sqlalchemy-mixins for starlette, especially fastapi.
 
 ## Features added by scil
-
+- refactor sqlalchemy_mixins API by adding `db` argument, e.g.  `def first(cls, db)` instead of `def first(cls)`
 - API for fastapi
   - `create_from_schema`.  save a new line from schema.
   - `init_from_schema` only create a new object from schema, not saved into db yet.
