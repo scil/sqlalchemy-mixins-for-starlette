@@ -46,10 +46,16 @@ class Item(Base):
     owner_id = Column(sa.Integer, ForeignKey("user.id"))
     owner = relationship("User", back_populates="items")
 
+# app/models/user.py
+class User(Base):
+    ...
+
 ```
 
 use
 ```
+# app/api/api_v1/endpoints/items.py
+
 @router.post("/", response_model=schemas.ItemResponse)
 def create_item(
         *,
@@ -61,6 +67,21 @@ def create_item(
     Create new item.
     """
     return models.Item.create_from_schema(db, item_in, {'owner_id':current_user.id})
+
+
+# app/api/deps.py
+
+def get_current_user(
+    db: Session = Depends(deps.get_db),
+    token: str = Depends(reusable_oauth2)
+) -> models.User:
+    token_data = ...
+
+    # old-style: user = crud.user.get(db, user_id=token_data.user_id)
+    user = models.User.find(db, token_data.sub)
+    ...
+
+
 ```
 
 # About accent-starlette/starlette-core
