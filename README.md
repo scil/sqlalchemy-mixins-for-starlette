@@ -50,7 +50,17 @@ class Item(Base):
 
 use
 ```
-models.Item.create_from_schema(db, item_in, {'owner_id':current_user.id})
+@router.post("/", response_model=schemas.ItemResponse)
+def create_item(
+        *,
+        db: Session = Depends(deps.get_db),
+        item_in: schemas.ItemCreate,
+        current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Create new item.
+    """
+    return models.Item.create_from_schema(db, item_in, {'owner_id':current_user.id})
 ```
 
 # About accent-starlette/starlette-core

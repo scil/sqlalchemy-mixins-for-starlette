@@ -21,7 +21,8 @@ from .timestamp import TimestampsMixin
 from .utils import classproperty
 
 # https://accent-starlette.github.io/starlette-core/database/
-from starlette_core.database import Base as AccentBase
+# from starlette_core.database import Base as AccentBase
+
 from sqlalchemy_paginator import Paginator
 
 from pydantic import BaseModel
@@ -35,7 +36,7 @@ class AllFeaturesMixin(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
     __repr__ = ReprMixin.__repr__
 
 
-    def update_from_schema(self, schema: BaseModel) -> Base:
+    def update_from_schema(self, schema: BaseModel):
         item_data = jsonable_encoder(self)
         update_data = schema.dict(skip_defaults=True)
 
@@ -50,7 +51,7 @@ class AllFeaturesMixin(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
         return self.save_return()
 
     @classmethod
-    def init_from_schema(cls, schema: BaseModel) -> Base:
+    def init_from_schema(cls, schema: BaseModel):
         """Create and persist a new record for the model
         :param kwargs: attributes for the record
         :return: the new model instance
@@ -59,7 +60,7 @@ class AllFeaturesMixin(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
 
 
     @classmethod
-    def create_from_schema(cls, db, schema: BaseModel, additions=None, ) -> Base:
+    def create_from_schema(cls, db, schema: BaseModel, additions=None, ) :
         if additions is None:
             return cls(**schema.dict(skip_defaults=True)).save_return(db)
 
@@ -72,6 +73,6 @@ class AllFeaturesMixin(ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeM
                          per_page_limit, optional_count_query_set, allow_empty_first_page)
 
     @classmethod
-    def get_multi(cls, db, skip=0, limit=100, ) -> List[Optional[Base]]:
+    def get_multi(cls, db, skip=0, limit=100, ):
 
         return db.query(cls).offset(skip).limit(limit).all()
